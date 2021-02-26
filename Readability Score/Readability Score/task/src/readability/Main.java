@@ -1,0 +1,341 @@
+package readability;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.DecimalFormat;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) throws IOException {
+        Scanner sc = new Scanner(System.in); // create the scanner
+        File file = new File(args[0]);
+        String originalText = new String(Files.readAllBytes(Paths.get(String.valueOf(file))));
+        String userInput = new String(Files.readAllBytes(Paths.get(String.valueOf(file))));
+        String[] words = userInput.split("\\p{Z}");
+
+
+        double WordSyllableCount = 0;
+        double TotalSyllableCount = 0;
+        double polysyllableCount = 0;
+        double sentences = 1;
+        double sentenceCounter = 1;
+        switch (userInput.charAt(userInput.length() - 1)) { // registers if last sentence ends without punctuation
+            case '.':
+            case '!':
+            case '?':
+                sentences = 0;
+                sentenceCounter = 0;
+                break;
+        }
+
+        double wordCounter = 0;
+        double clCounter = 0;
+        double wordCharCount = 0;
+        StringBuilder sbCl = new StringBuilder(""); //for adding values to eventually find the L portion on the Coleman-Liau Index
+        StringBuilder sbCs = new StringBuilder(""); //for adding values to eventually find the S portion on the Coleman-Liau Index
+
+        for (String word : words) {
+            WordSyllableCount = getSyllables(word);
+            if (WordSyllableCount > 2) {
+                polysyllableCount++;
+            }
+            if (clCounter == 100) {
+                sbCl.append(wordCharCount).append(" ");                 //append the wordChar count to a string with a space.
+                sbCs.append(sentenceCounter).append(" ");
+                sentenceCounter = 0;  //reset the sentenceCounter
+                wordCharCount = 0;                // Reset the clCounter and wordCharCount to zero
+                clCounter = 0;
+            }
+//            TotalSyllableCount += getSyllables(word);  //keep a running tally of all the syllables
+            TotalSyllableCount = getSyllables(userInput);
+            if (word.endsWith(".")) {
+                sentences++;
+                sentenceCounter++; //registers sentence ending with period
+            }
+            if (word.endsWith("!")) {
+                sentences++;
+                sentenceCounter++; //registers sentence ending with exclamation point
+            }
+            if (word.endsWith("?")) {
+                sentences++;
+                sentenceCounter++; //registers sentence ending with question mark
+            }
+            wordCounter++;                            //counts every word
+
+            String[] wordChar = word.split("");
+            for (int i = 0; i < wordChar.length; i++) {
+                wordCharCount++;
+            }
+
+            clCounter++; //keeps track of every 100 words to calculate Coleman-Liau index for characters
+        }
+
+        //calculate L for  the Coleman-Liau Index
+        String strCl = sbCl.toString();
+        double sum = 0;
+        String[] sbClArr = strCl.split(" ");
+        for (String s : sbClArr) {  //calculate the sum for the average of the array
+            sum += Double.parseDouble(s);
+        }
+        double L = sum / sbClArr.length;
+
+        System.out.println("L is : " + L);
+
+        //calculate S for the Coleman-Liau Index
+        String strCs = sbCs.toString();
+        double sum1 = 0;
+        String[] sbCsArr = strCs.split(" ");
+        for (String s : sbCsArr) {
+            sum1 += Double.parseDouble(s);
+        }
+        double S = sum1 / sbCsArr.length;
+        System.out.println("S is : " + S);
+
+
+
+        //calculate characters
+        userInput = userInput.replaceAll("[\n \t \\s]", ""); // getting rid of invisible characters
+        String[] characters = userInput.split("");
+
+        int charCount = 0;
+        for (int i = 0; i < characters.length; i++) {
+            charCount++;
+        }
+
+
+
+        DecimalFormat df = new DecimalFormat("###.##");
+
+
+        //output
+        System.out.println("The text is:");
+        System.out.println(originalText);
+        System.out.println();
+        System.out.println("Words: " + wordCounter);
+        System.out.println("Sentences: " + sentences);
+        System.out.println("Characters: " + charCount);
+        System.out.println("Syllables: " + TotalSyllableCount);
+        System.out.println("Polysyllables: " + polysyllableCount);
+        System.out.print("Enter the score you want to calculate (ARI, FK, SMOG, CL, all): ");
+
+        System.out.println();
+
+        double score = 0;
+        StringBuilder sbAvg = new StringBuilder();
+        String userAnswer = sc.next().toUpperCase();
+        switch (userAnswer) {
+            case "ARI":
+                score = getArIndex(charCount, wordCounter, sentences);
+                System.out.println("Automated Readability Index: " + df.format(getArIndex(charCount, wordCounter, sentences)) + " (" + getAge(score) + ").");
+                break;
+            case "FK":
+                score = getFkIndex(wordCounter, sentences, TotalSyllableCount);
+                System.out.println("Flesch-Kincaid readability tests: " + df.format(getFkIndex(wordCounter, sentences, TotalSyllableCount)) + " (" + getAge(score) + ").");
+                break;
+            case "SMOG":
+                score = getSmogIndex(polysyllableCount, sentences);
+                System.out.println("Simple Measure of Gobbledygook: " + df.format(getSmogIndex(polysyllableCount, sentences)) + " (" + getAge(score) + ").");
+                break;
+            case "CL":
+                score = getClIndex(L, S);
+                System.out.println("Coleman-Liau index: " + df.format(getClIndex(L, S)) + " (" + getAge(score) + ")");
+            case "ALL":
+                score = getArIndex(charCount, wordCounter, sentences);
+                String a = ("Automated Readability Index: " + df.format(getArIndex(charCount, wordCounter, sentences)) + " (" + getAge(score) + ").");
+                System.out.println(a);
+                String[] strArrA = a.split(" ");
+                sbAvg.append(Double.parseDouble(strArrA[5])).append(" "); //Double.parseDouble probably not necessary here
+
+                score = getFkIndex(wordCounter, sentences, TotalSyllableCount); //update score value
+                String b = ("Flesch–Kincaid readability tests: " + df.format(getFkIndex(wordCounter, sentences, TotalSyllableCount)) + " (" + getAge(score) + ").");
+                System.out.println(b);
+                String[] strArrB = b.split(" ");
+                sbAvg.append(Double.parseDouble(strArrB[5])).append(" ");
+
+                score = getSmogIndex(polysyllableCount, sentences); //update score value
+                String c = ("Simple Measure of Gobbledygook: " + df.format(getSmogIndex(polysyllableCount, sentences)) + " (" + getAge(score) + ").");
+                System.out.println(c);
+                String[] strArrC = c.split(" ");
+                sbAvg.append(Double.parseDouble(strArrC[6])).append(" ");
+
+//                score = getClIndex(L, S); //update score value
+//                String d = ("Coleman–Liau index: " + df.format(getClIndex(L, S)) + " (" + getAge(score) + ").");
+//                System.out.println(d);
+//                String[] strArrD = d.split(" ");
+//                sbAvg.append(Double.parseDouble(strArrD[4])).append(" ");
+                double d = calculateCLIValue(originalText);
+                String strD = ("Coleman–Liau index: " + d + " (" + getAge(score) + ").");
+                System.out.println(strD);
+                sbAvg.append(d).append(" ");
+
+
+                //calculate total average across all readability indexes.
+                double sumForAvg = 0;
+                String strAvg = sbAvg.toString();
+                String[] strAvgArr = strAvg.split(" ");
+                for(String s : strAvgArr){
+                    sumForAvg += Double.parseDouble(s);
+                }
+                double totalAvg = sumForAvg / strAvgArr.length;
+                System.out.println("This text should be understood in average by " + totalAvg + " year olds.");
+        }
+    }
+
+    //methods for the different readability formulas
+    public static double getFkIndex(double wordCounter, double sentences, double TotalSyllableCount) {
+        return 0.39 * (wordCounter / sentences) + 11.8 * (TotalSyllableCount / wordCounter) - 15.59;
+    }
+
+    public static double getSmogIndex(double polysyllableCount, double sentences) {
+        return 1.043 * Math.sqrt(polysyllableCount * (30 / sentences)) + 3.1291;
+    }
+
+    public static double getClIndex(double L, double S) {
+        return 0.0588 * L - 0.296 * S - 15.8;
+    }
+
+    public static double getArIndex(double charCount, double wordCounter, double sentences) {
+        return 4.71 * (charCount / wordCounter) + 0.5 * (wordCounter / sentences) - 21.43;
+    }
+
+
+//    public static int getSyllables(String word) {  ANOTHER WAY TO POSSIBLY DO IT
+//        //gets syllables in word
+//        int vowels = 0;
+//        char[] vowelArr = {'a', 'e', 'i', 'o', 'u', 'y'};
+//
+//        if (word.charAt(word.length() - 1) == 'e') {
+//            vowels--;
+//        }
+//        for (int i = 0; i < word.length() - 1; i++) {
+//            for (int j = 0; j < vowelArr.length; j++) {
+//                if (word.charAt(i) == vowelArr[j]) {
+//                    vowels++;
+//                }
+//                for (int k = 0; k < vowelArr.length; k++) //accounts for vowels side by side
+//                    if (word.charAt(i) == vowelArr[j] && word.charAt(i + 1) == vowelArr[k])
+//                        vowels--;
+//            }
+//        }
+//        if (vowels > 0) {
+//            return vowels;
+//        } else {
+//            return 1;
+//        }
+//    }
+
+    public static String getAge(double score) {
+        String result = "";
+        double score1 = Math.round(score);
+        switch ((int) score1) {
+            case 1:
+                result = "about 5 year olds.";
+                break;
+            case 2:
+                result = "about 6 year olds.";
+                break;
+            case 3:
+                result = "about 7 year olds.";
+                break;
+            case 4:
+                result = "about 9 year olds.";
+                break;
+            case 5:
+                result = "about 10 year olds.";
+                break;
+            case 6:
+                result = "about 12 year olds.";
+                break;
+            case 7:
+                result = "about 13 year olds";
+                break;
+            case 8:
+                result = "about 14 year olds";
+                break;
+            case 9:
+                result = "about 15 year olds";
+                break;
+            case 10:
+                result = "about 16 year olds";
+                break;
+            case 11:
+                result = "about 17 year olds";
+                break;
+            case 12:
+                result = "about 18 year olds";
+                break;
+            case 13:
+                result = "about 19 year olds";
+                break;
+            case 14:
+                result = "about 24 year olds";
+                break;
+        }
+        return result;
+    }
+
+    public static int getSyllables(String userInput) {
+        int syllables = 0;
+        String[] words = userInput.split("\\s+|\\.\\s+|\\?\\s+|!\\s+");
+
+        for (String word : words) {
+            int currentSyllables = getSyllablesOfOneWord(word);
+            currentSyllables = currentSyllables > 0 ? currentSyllables : 1;
+            syllables += currentSyllables;
+        }
+        return syllables;
+    }
+
+    private static int getSyllablesOfOneWord(String userInput) {
+        String vowels = "aeiouy";
+
+        int syllables = 0;
+        boolean flag = false;
+        for (int i = 0; i < userInput.length(); i++) {
+            char currentChar = userInput.charAt(i);
+
+            if (i == userInput.length() - 1 && userInput.charAt(i) == 'e') {
+                break; // if last char is 'e' it is not counted
+            }
+            // the below if else ensure more than one consecutive vowels are counted as one syllable
+            if (vowels.indexOf(currentChar) >= 0) {
+                if (!flag) {
+                    syllables++;
+                }
+                flag = true;
+            } else {
+                flag = false;
+            }
+        }
+        return syllables;
+    }
+
+
+    public static double calculateCLIValue(String sentence) {
+        int letterCount = 0;
+        int spaceCount = 0;
+        int sentenceCount = 0;
+        int length = sentence.length();
+        for (int i = 0; i < length; i++) {
+            char c = sentence.charAt(i);
+            if (Character.isLetterOrDigit(c)) {
+                letterCount++;
+            } else if (c == ' ') {
+                spaceCount++;
+            } else if (c == '.') {
+                if (i != length - 1 && sentence.charAt(i + 1) == ' ') {
+                    sentenceCount++;
+                }
+            }
+
+        }
+        int wordCount = spaceCount + 1;
+
+        double l = (double) letterCount / (double) wordCount * 100;
+        double s = (double) sentenceCount / (double) wordCount * 100;
+
+        return 0.0588 * l - 0.296 * s - 15.8;
+    }
+}
