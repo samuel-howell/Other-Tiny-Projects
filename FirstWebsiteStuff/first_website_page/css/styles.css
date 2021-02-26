@@ -1,0 +1,219 @@
+/*
+my palette:
+
+9EB7E5  Wild Blue Yonder
+648DE5  United Nations Blue
+C1666B  Fuzzy Wuzzy
+F19A3E  Deep Saffron
+403233  Black Coffee
+*/
+
+/*Global Styles
+-----------------------------------*/
+html {      /* this is called the box fix. add it to every project. */
+    box-sizing: border-box;
+}
+*, *:before, *:after {
+    box-sizing: inherit;
+}
+
+body
+{
+    color : #403233;
+    margin : 0;
+    padding: 0;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;  /* this unit-less value allows the spacing to always be 1.5 times bigger than the font size */
+
+}
+
+img 
+{
+    width: 300px;
+}
+
+a
+{
+    color: #C1666B;
+}
+
+a:hover /*handles the default text underline */ 
+{
+    text-decoration: none;
+}
+
+h1, h2
+{
+    font-family: 'Bebas Neue', cursive;
+    font-weight: 400;
+    margin: 0;
+}
+
+h1
+{
+    font-size: 60px;
+}
+
+h2
+{
+    margin : 0;
+    font-size: 35px;
+}
+
+.content-wrap
+{
+    max-width: 900px; /*this max-width allows the browser to scale down/up to fit the viewport */
+    width: 85%;  /*  keeps the content from going to the very edge of the viewport*/
+    margin: 0 auto;
+    padding: 60px 0; /*first number is top/bottom and second number is left/right*/
+}
+
+.item_details h3 + p      /* Adjacent sibling combinator (+) - only matches to the first p that directly comes after h3*/
+{
+    font-style: italic;
+}
+
+.item_details h3 ~ p      /* General Sibling combinator (~) -  matches to all the p that directly comes after h3 in a section*/
+{
+    margin: 0;
+}
+
+.divider > section        /* this ensures that only the section child elements within the divider element will be selected*/
+{
+    border-bottom: 1px dashed #C1666B;
+    padding: 25px 0;
+}
+
+.divider > section:last-of-type  /* this deletes the last border in each section child element */
+{
+    border-bottom: none;
+}
+
+/*Projects
+-----------------------------------*/
+header
+{
+    background: #9EB7E5;
+}
+
+
+
+.projects .btn /*this is descendant class that impacts just the links in the projects section */
+{
+    color: #ffffff;
+    background: #443334;
+    text-decoration: none;
+    padding: 8px;           /* this padding and the border-radius makes it look like a button */ 
+    border-radius: 4px;
+    display: inline-block;
+
+}
+
+.projects .btn:hover
+{
+    color: rgba(193,102,107, 80);  /* this adds the alpha channel to the rgb to change the opacity */ 
+}
+
+.project_item
+{
+    overflow: hidden;  /*  clears the parent element so all the images line up nice */
+}
+
+
+.project_item h3
+{
+    margin-top: 0;
+}
+/*Work Experience
+-----------------------------------*/
+.work_experience
+{
+    background: #9EB7E5;
+}
+
+
+
+/*Education
+-----------------------------------*/
+.education
+{
+    background-image: url(../images/joanna-kosinska-unsplash.jpg);
+    background-size: cover;
+    background-position: top right;  /*keeps the top right of the image in the viewport, no matter the size*/
+    padding-bottom: 100px;
+}
+
+.education p 
+{
+    width: 60%;
+}
+
+
+/*Contact Info
+-----------------------------------*/
+footer
+{
+    background: #648DE5;  /* is the background not showing because the flex box is overriding it?*/
+}
+
+.contact_list
+{
+    list-style-type: none;
+    padding: 0;
+}
+
+.contact_list a
+{
+    padding: 15px;
+    display: inline-block
+}
+
+/*Responsive Styles
+-----------------------------------*/
+@media screen and (min-width: 750px)   /*everything under here applies to viewports 750px or larger*/
+{
+        .project_item img
+    {
+        float: left;                            /*This float will only apply to viewports 750px in width or larger*/
+        margin-right: 25px;
+    }
+
+        .job_item
+    {
+        display: grid;
+        grid-template-columns: 1fr 2fr;         /* means second column will be twice the size of the first column */
+        column-gap: 20px;   /*sets a column space between grid elements so that they don't run up on each other before they wrap*/
+    }
+
+    .contact_list
+    {
+        display: flex;      /*aligns items horizontally using flexbox*/
+        justify-content: center;
+    }
+
+    header, footer
+    {
+        text-align: center; /*doesn't affect flexbox*/
+    }
+}
+
+@media screen and (max-width: 749px)  /*make it 749px so it doesn't conflict with the media query at 750px.  Applies to any viewport size under 749px*/
+{
+    h1 
+    {
+        font-size: 75px;
+        line-height: 0.9;       /* changes the line height on h1 so that it doesn't look so far apart*/
+        margin-bottom: 20px;    /* puts more space between the h1 and the h2 in the header*/
+    }
+
+    h2 
+    {
+        line-height: 1;
+    }
+
+    .contact_list a
+    {
+        padding: 5px;  /*  removes the amount of space between the contact links at the bottom when the viewport is small*/
+    }
+}
